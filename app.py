@@ -28,16 +28,15 @@ st.markdown("""
 
 # --- HLAVIČKA ---
 st.markdown("<h1>🩺 Anesteziologický asistent</h1>", unsafe_allow_html=True)
-st.caption("Zdroj: Interní směrnice | Kompletní slovník léků", unsafe_allow_html=True)
+st.caption("Zdroj: Interní směrnice vč. nového dia managementu", unsafe_allow_html=True)
 st.write("---")
 
 # --- 1. VSTUP ---
 st.subheader("Vložte chronickou medikaci pacienta:")
-med_text = st.text_area("", height=200, placeholder="Např.: Prestarium, Eliquis 5mg, Metformin, Euthyrox...").lower()
+med_text = st.text_area("", height=200, placeholder="Např.: Prestarium, Eliquis, Metformin, Ozempic, Bydureon...").lower()
 st.write("")
 
-# --- 2. DATABÁZE LÉČIV ---
-# Každý řádek je pečlivě zkontrolován na přítomnost uzavíracích závorek a uvozovek.
+# --- 2. MEGA DATABÁZE LÉČIV ---
 db = [
     # === HYPERTENZE - KOMBINOVANÉ PREPARÁTY ===
     {"brands": ["accuzide", "amesos", "cazacombi", "egiramlon", "furorese", "hcht", "ifirmacombi", "lodoz", "loradur", "lozap h"], "gen": "Kombinace (ACEI/Sartan/Diuretikum)", "grp": "Kombinace", "act": "VYSADIT V DEN VÝKONU", "info": "Obsahuje ACEI, Sartan nebo Diuretikum.", "col": "red"},
@@ -76,79 +75,47 @@ db = [
     {"brands": ["cynt", "dopegyt", "moxogamma", "moxonidin", "moxostad", "rilmenidin", "tenaxum", "doxazosin", "ebrantil", "hytrin", "kamiren", "zoxon", "urapidil", "labetelol"], "gen": "Centrální / Alfa blokátory", "grp": "Kardio", "act": "PONECHAT", "info": "-", "col": "green"},
     
     # === HYPOLIPIDEMIKA ===
-    {"brands": ["ezetrol", "ezetimib", "lipanthyl", "fenofibrat"], "gen": "Fibráty / Ezetrol", "grp": "Hypolipidemika (Nestatinová)", "act": "VYSADIT V DEN VÝKONU", "info": "-", "col": "red"},
-    {"brands": ["atorvastatin", "sorvasta", "tulip", "rosuvastatin", "torvacard", "atoris", "sortis"], "gen": "Statin", "grp": "Hypolipidemika", "act": "PONECHAT", "info": "-", "col": "green"},
+    {"brands": ["ezetrol", "ezetimib", "lipanthyl", "fenofibrat"], "gen": "Fibráty / Ezetrol", "grp": "Hypolipidemika", "act": "VYSADIT V DEN VÝKONU", "info": "Riziko myopatie.", "col": "red"},
+    {"brands": ["atorvastatin", "sorvasta", "tulip", "rosuvastatin", "torvacard", "atoris", "sortis"], "gen": "Statin", "grp": "Hypolipidemika", "act": "PONECHAT", "info": "Snižují riziko CMP, IM.", "col": "green"},
 
     # === ANTIARYTMIKA / NITRÁTY ===
-    {"brands": ["cordarone", "sedacoron", "amiodaron", "ritmonorm", "digoxin"], "gen": "Antiarytmikum", "grp": "Kardio", "act": "PONECHAT", "info": "-", "col": "green"},
-    {"brands": ["nitromint", "cardiket", "mono mack", "isoket"], "gen": "Nitráty", "grp": "Kardio", "act": "PONECHAT", "info": "-", "col": "green"},
+    {"brands": ["cordarone", "sedacoron", "amiodaron", "ritmonorm", "digoxin"], "gen": "Antiarytmikum", "grp": "Kardio", "act": "PONECHAT", "info": "Amiodaron: CAVE na hypokalemii a hypomagnezémii.", "col": "green"},
+    {"brands": ["nitromint", "cardiket", "mono mack", "isoket"], "gen": "Nitráty", "grp": "Kardio", "act": "PONECHAT", "info": "CAVE na hypovolemii.", "col": "green"},
 
     # === ANTIAGREGACE & ANTIKOAGULACE ===
-    {"brands": ["anopyrin", "godasal", "stacyl", "stacly", "aspirin", "acylpyrin", "anp", "asketon"], "gen": "ASA", "grp": "Antiagregace", "act": "PONECHAT", "info": "Vysadit 7 dní předem jen u výkonů s vysokým rizikem krvácení nebo duální terapie.", "col": "green"},
+    {"brands": ["anopyrin", "godasal", "stacyl", "stacly", "aspirin", "acylpyrin", "anp", "asketon"], "gen": "ASA", "grp": "Antiagregace", "act": "PONECHAT", "info": "Vysadit v den výkonu nebo 7 dní předem u výkonů s vysokým rizikem krvácení. Ponechat u duální terapie.", "col": "green"},
     {"brands": ["trombex", "plavix", "clopidogrel", "zylagren", "zyllt", "iscover", "platel"], "gen": "Clopidogrel", "grp": "Antiagregace", "act": "VYSADIT 7 DNÍ PŘEDEM", "info": "Vysoké riziko krvácení.", "col": "red"},
     {"brands": ["warfarin", "lawarin"], "gen": "Warfarin", "grp": "Antikoagulace", "act": "VYSADIT 3-5 DNÍ PŘEDEM", "info": "Nutný bridging dle INR.", "col": "red"},
-    {"brands": ["eliquis", "apixaban", "xarelto", "rivaroxaban", "pradaxa", "dabigatran", "lixiana", "edoxaban"], "gen": "NOAK", "grp": "NOAK", "act": "VYSADIT 1-2 DNY PŘEDEM", "info": "1 den předem (standard) nebo 2 dny (vysoké riziko). ⚠️ Pozor: Eliminaci léku může ovlivňovat funkce ledvin!", "col": "red"},
+    {"brands": ["eliquis", "apixaban", "xarelto", "rivaroxaban", "pradaxa", "dabigatran", "lixiana", "edoxaban"], "gen": "NOAK", "grp": "NOAK", "act": "VYSADIT 1 NEBO 2 DNY PŘEDEM", "info": "1 den předem (standard) nebo 2 dny (vysoké riziko). ⚠️ Eliminaci může ovlivňovat funkce ledvin!", "col": "red"},
 
     # === ENDOKRINOLOGIE & DIABETES ===
     {"brands": ["euthyrox", "letrox", "thyrozol", "jodid", "eutyrox"], "gen": "Levothyroxin", "grp": "Štítná žláza", "act": "PONECHAT", "info": "Substituce se nepřerušuje.", "col": "green"},
-    {"brands": ["metformin", "stadamet", "siofor", "glucophage", "mulado"], "gen": "Metformin", "grp": "Antidiabetikum", "act": "VYSADIT 48H", "info": "Riziko laktátové acidózy. ⚠️ Pozor: Eliminaci léku může ovlivňovat funkce ledvin!", "col": "red"},
-    {"brands": ["jardiance", "forxiga", "invokana", "synjardy"], "gen": "Gliflozin (SGLT2)", "grp": "Antidiabetikum", "act": "VYSADIT 3 DNY PŘEDEM", "info": "Riziko euglykemické ketoacidózy. ⚠️ Pozor: Eliminaci léku může ovlivňovat funkce ledvin!", "col": "red"},
+    {"brands": ["metformin", "stadamet", "siofor", "glucophage", "metfogamma", "mulado"], "gen": "Metformin", "grp": "Antidiabetikum", "act": "VYSADIT 24h PŘEDEM", "info": "Vysadit u středních/velkých výkonů. U malých lze ponechat. ⚠️ Eliminaci ovlivňují ledviny!", "col": "red"},
+    {"brands": ["jardiance", "forxiga", "invokana", "synjardy", "xigduo"], "gen": "Glifloziny (SGLT2)", "grp": "Antidiabetikum", "act": "VYSADIT 3-4 DNY PŘEDEM", "info": "Riziko euglykemické ketoacidózy. ⚠️ Eliminaci ovlivňují ledviny!", "col": "red"},
+    {"brands": ["bydureon", "byetta", "victoza", "ozempic", "trulicity", "rybelsus"], "gen": "GLP-1 agonisté", "grp": "Diabetes", "act": "VYSADIT V DEN VÝKONU", "info": "Kontroly glykémie á 4-6 hod.", "col": "red"},
+    {"brands": ["januvia", "sitagliptin", "trajenta", "vipidia", "galvus", "pioglitazon", "actos"], "gen": "Gliptiny / Pioglitazon", "grp": "Diabetes", "act": "VYSADIT V DEN VÝKONU", "info": "-", "col": "red"},
+    {"brands": ["amaryl", "glimepirid", "oltar", "diaprel", "gliklazid", "glyclada"], "gen": "Sulfonylurea", "grp": "Diabetes", "act": "VYSADIT V DEN VÝKONU", "info": "Riziko hypoglykémie.", "col": "red"},
     {"brands": ["novorapid", "actrapid", "humalog", "apidra", "fiasp"], "gen": "Insulin (Bolus)", "grp": "Diabetes", "act": "NEPODÁVAT", "info": "Při lačnění nepodávat.", "col": "red"},
-    {"brands": ["tresiba", "lantus", "toujeo", "levemir", "abslaglar"], "gen": "Insulin (Bazál)", "grp": "Diabetes", "act": "REDUKOVAT DÁVKU", "info": "Podat cca 75-80% dávky.", "col": "blue"},
-    {"brands": ["oltar", "glimepirid", "gliklazid", "glyclada"], "gen": "Sulfonylurea", "grp": "Diabetes", "act": "NEPODÁVAT", "info": "Riziko hypoglykémie.", "col": "red"},
-    {"brands": ["prednison", "medrol", "fortecortin", "dexamed"], "gen": "Kortikoid", "grp": "Steroidy", "act": "SUBSTITUCE NUTNÁ", "info": "Zajistit peri- a pooperační substituci dle rozsahu výkonu.", "col": "blue"},
+    {"brands": ["tresiba", "lantus", "toujeo", "levemir", "abslaglar"], "gen": "Insulin (Bazál)", "grp": "Diabetes", "act": "PONECHAT / REDUKOVAT", "info": "Ponechat jak nastaveno z předchozího dne, perioperačně bazální režim.", "col": "blue"},
+    {"brands": ["prednison", "medrol", "fortecortin", "dexamed", "hydrocortison"], "gen": "Kortikoid p.o.", "grp": "Steroidy", "act": "SUBSTITUCE (PŘI DÁVCE > 5mg Prednisonu)", "info": "Do 5mg ponechat. Nad 5mg: střední výkon 50mg i.v., velký výkon 100mg i.v.", "col": "blue"},
+    {"brands": ["tamoxifen", "raloxifen", "evista"], "gen": "SERM (Hormony)", "grp": "Endokrino", "act": "PONECHAT S LMWH", "info": "Vysadit POUZE u vysokého rizika TEN (Raloxifen 3 dny, Tamoxifen 2-3 týdny předem).", "col": "green"},
+
+    # === BONE & OSTEOPORÓZA ===
+    {"brands": ["alendronat", "ibandronat", "risedronat", "fosamax", "bonviva", "actonel"], "gen": "Bisfosfonáty", "grp": "Osteoporóza", "act": "VYSADIT V DEN VÝKONU", "info": "Zapíjí se velkým množstvím vody, riziko aspirace.", "col": "red"},
 
     # === RESPIRAČNÍ ===
-    {"brands": ["ventolin", "salbutamol", "buventol", "ecosal"], "gen": "Salbutamol (SABA)", "grp": "Inhalace", "act": "PONECHAT", "info": "Ráno i před sál prevence spasmu. Posílit dávku.", "col": "green"},
-    {"brands": ["berodual", "ipratropium", "atrovent"], "gen": "Fenoterol/Ipratropium", "grp": "Inhalace", "act": "PONECHAT", "info": "Nevysazovat. Posílit dávku.", "col": "green"},
-    {"brands": ["spiriva", "braltus", "biskair"], "gen": "Tiotropium (LAMA)", "grp": "Inhalace", "act": "PONECHAT", "info": "Udržet bronchodilataci. Posílit dávku.", "col": "green"},
-    {"brands": ["seretide", "symbicort", "combair", "foster", "duoresp", "salmex", "trixeo", "trelegy"], "gen": "ICS/LABA/LAMA", "grp": "Inhalace (Kombinace)", "act": "PONECHAT", "info": "Nevysazovat! Posílit dávku (více vdechů).", "col": "green"},
-    {"brands": ["euphyllin", "tezeo", "theoplus"], "gen": "Teofylin", "grp": "Methylxanthiny", "act": "PONECHAT", "info": "-", "col": "green"},
+    {"brands": ["ventolin", "salbutamol", "buventol", "ecosal"], "gen": "Salbutamol (SABA)", "grp": "Inhalace", "act": "PONECHAT A POSÍLIT", "info": "Ráno i před sál prevence spasmu. Posílit i pokud užívá jen dlp.", "col": "green"},
+    {"brands": ["berodual", "ipratropium", "atrovent"], "gen": "Fenoterol/Ipratropium", "grp": "Inhalace", "act": "PONECHAT A POSÍLIT", "info": "Nevysazovat. Posílit více vdechy.", "col": "green"},
+    {"brands": ["spiriva", "braltus", "biskair"], "gen": "Tiotropium (LAMA)", "grp": "Inhalace", "act": "PONECHAT A POSÍLIT", "info": "Udržet bronchodilataci. Posílit více vdechy.", "col": "green"},
+    {"brands": ["seretide", "symbicort", "combair", "foster", "duoresp", "salmex", "trixeo", "trelegy"], "gen": "ICS/LABA/LAMA", "grp": "Inhalace", "act": "PONECHAT A POSÍLIT", "info": "Pokud > 2 vdechy denně: Hydrocortison 50/100mg i.v.", "col": "green"},
+    {"brands": ["theofylin", "aminofylin", "syntophyllin", "euphyllin", "tezeo", "theoplus"], "gen": "Methylxanthiny", "grp": "Pneumo", "act": "VYSADIT", "info": "Riziko arytmií a neurotoxicity. NEPODÁVAT do premedikace!", "col": "red"},
+    {"brands": ["montelukast", "castispir", "singulair", "asmen"], "gen": "Inhibitory leukotrienů", "grp": "Pneumo", "act": "PONECHAT", "info": "-", "col": "green"},
 
     # === PSYCHIATRIE / NEUROLOGIE / BOLEST ===
-    {"brands": ["neurol", "xanax", "lexaurin", "diazepam", "rivotril", "frontin", "buspiron"], "gen": "Anxiolytika / BZD", "grp": "Psychofarmaka", "act": "PONECHAT", "info": "-", "col": "green"},
+    {"brands": ["neurol", "xanax", "lexaurin", "diazepam", "rivotril", "frontin", "buspiron"], "gen": "Anxiolytika / BZD", "grp": "Psychofarmaka", "act": "PONECHAT", "info": "Nevysazovat ani u starších osob!", "col": "green"},
     {"brands": ["zolpidem", "stilnox", "hypnogen", "sanval", "adorma"], "gen": "Zolpidem", "grp": "Hypnotikum", "act": "RÁNO NEPODÁVAT", "info": "Riziko sedace.", "col": "red"},
-    {"brands": ["citalec", "cipralex", "zoloft", "trittico", "mirtazapin", "argofan", "elicea", "asentra"], "gen": "Antidepresiva", "grp": "Psychofarmaka", "act": "PONECHAT", "info": "Pozor na iMAO (vysadit 2 týdny předem).", "col": "green"},
-    {"brands": ["lithium", "lithium carbonicum"], "gen": "Lithium", "grp": "Stabilizátor nálady", "act": "VYSADIT / PONECHAT", "info": "Vysadit 3 dny předem POUZE u velkých operačních výkonů, jinak ponechat.", "col": "yellow"},
+    {"brands": ["citalec", "cipralex", "zoloft", "trittico", "mirtazapin", "argofan", "elicea", "asentra"], "gen": "Antidepresiva", "grp": "Psychofarmaka", "act": "PONECHAT", "info": "Pozor na iMAO (vysadit 2 týdny předem, absolutní KI ephedrin!).", "col": "green"},
+    {"brands": ["lithium", "lithium carbonicum"], "gen": "Lithium", "grp": "Stabilizátor nálady", "act": "PONECHAT", "info": "Vysadit 3 dny předem POUZE u velkých operačních výkonů.", "col": "green"},
     {"brands": ["guanfacin", "intuniv"], "gen": "Guanfacin", "grp": "ADHD", "act": "PONECHAT", "info": "-", "col": "green"},
     {"brands": ["ritalin", "concerta", "atomoxetin", "strattera", "bitinex"], "gen": "Methylfenidát/Atomoxetin", "grp": "ADHD", "act": "VYSADIT V DEN VÝKONU", "info": "-", "col": "red"},
-    {"brands": ["zyprexa", "olanzapin", "tiaprid", "buronil", "quetiapin", "ketiapin", "risperdal"], "gen": "Antipsychotika", "grp": "Psychofarmaka", "act": "PONECHAT", "info": "-", "col": "green"},
-    {"brands": ["lyrica", "pregabalin", "gabapentin", "neurontin", "gabanox", "depakine", "biston", "lamictal", "timonil"], "gen": "Antiepileptikum", "grp": "Neuro", "act": "PONECHAT", "info": "-", "col": "green"},
-    {"brands": ["nakom", "madopar", "isicom"], "gen": "L-Dopa", "grp": "Antiparkinsonikum", "act": "PONECHAT", "info": "Přísně dodržet časování!", "col": "green"},
-    {"brands": ["doreta", "zaldiar", "foxis", "palgotal", "ultracod", "tramal", "mabron", "tramabene"], "gen": "Tramadol/Paracetamol", "grp": "Analgetikum (Opioid)", "act": "PONECHAT", "info": "⚠️ OPIÁT: Tolerance. Nevysazovat.", "col": "green"},
-    {"brands": ["fentanyl", "matrifen", "durogesic", "transtec", "buprenorphin"], "gen": "Opioid (Náplast)", "grp": "Analgetikum (TD)", "act": "PONECHAT - NEODLEPOVAT", "info": "⚠️ SILNÝ OPIÁT: Vysoká tolerance!", "col": "yellow"},
-    {"brands": ["oxycontin", "targin", "dhc", "sevredol"], "gen": "Silný opioid (p.o.)", "grp": "Analgetikum", "act": "PONECHAT", "info": "⚠️ SILNÝ OPIÁT: Nutno podat ranní dávku.", "col": "green"},
-
-    # === OSTATNÍ (Žíly, GIT, Ionty) ===
-    {"brands": ["detralex", "mobivenal", "diozen", "devenal", "cyclo 3 fort", "glyvenol"], "gen": "Venofarmaka", "grp": "Cévy", "act": "PONECHAT", "info": "-", "col": "green"},
-    {"brands": ["pantoprazol", "controloc", "helides", "omeprazol", "helicid", "emanera", "nolpaza", "sulfasalazin", "pentasa", "asacol"], "gen": "PPI / Mesalazin", "grp": "GIT", "act": "PONECHAT", "info": "-", "col": "green"},
-    {"brands": ["kreon", "pancreolan"], "gen": "Enzymy", "grp": "GIT", "act": "VYNECHAT", "info": "Při lačnění nemají smysl.", "col": "red"},
-    {"brands": ["kalnormin", "magnosolv", "magnesium", "vigantol", "novalgin"], "gen": "Suplementace / Analgetika", "grp": "Ostatní", "act": "PONECHAT", "info": "-", "col": "green"},
-    {"brands": ["milurit", "purinol", "alopurinol"], "gen": "Allopurinol", "grp": "Dna", "act": "PONECHAT", "info": "-", "col": "green"},
-    {"brands": ["betoptic", "timolol", "cosopt", "carteol"], "gen": "Oční kapky", "grp": "Oční", "act": "PONECHAT", "info": "Nevysazovat!", "col": "green"},
-]
-
-# --- 3. VYHODNOCENÍ ---
-if st.button("🚀 VYHODNOTIT MEDIKACI", type="primary"):
-    st.subheader("Doporučení:")
-    found_count = 0
-    
-    for item in db:
-        match = next((b for b in item["brands"] if b in med_text), None)
-        
-        if match:
-            found_count += 1
-            
-            st.markdown(f"""
-            <div class="drug-card border-{item['col']}">
-                <span class="card-title">{match.capitalize()} <span class="card-generic">({item['gen']})</span></span>
-                <span class="card-rec">{item['act']}</span>
-                <span class="card-info">{item['info']}</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-    if found_count == 0:
-        st.info("Žádná riziková medikace nenalezena (nebo není v databázi).")
-        
-    if "vysazeno" in med_text or "ex" in med_text:
-        st.warning("⚠️ **Pozor:** Text obsahuje slovo 'vysazeno'/'ex'. Pokud pacient lék neužívá, ignorujte pokyn k jeho vysazení.")
+    {"brands": ["zyprexa", "olanzapin", "tiaprid", "buronil", "quetiapin", "ketiapin", "risperdal"], "gen": "Antipsychotika", "grp": "Psychofarmaka", "act": "PONECHAT", "
