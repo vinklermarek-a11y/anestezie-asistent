@@ -23,12 +23,22 @@ st.markdown("""
     .card-generic { font-weight: 400; color: #555; font-size: 0.85em; }
     .card-rec { font-weight: 700; display: block; margin-top: 2px; font-size: 1.05em; }
     .card-info { font-size: 0.95em; font-style: italic; opacity: 0.9; display: block; margin-top: 4px; }
+    .nis-box {
+        background-color: #e0e0e0;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        color: #333;
+        font-family: monospace;
+        font-size: 1.05em;
+        border-left: 6px solid #888;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 # --- HLAVIČKA ---
 st.markdown("<h1>🩺 Anesteziologický asistent</h1>", unsafe_allow_html=True)
-st.caption("Zdroj: Interní směrnice + Prezentace + Dia protokol", unsafe_allow_html=True)
+st.caption("Zdroj: Interní směrnice + Prezentace + Dia protokol + Nová farmaka", unsafe_allow_html=True)
 st.write("---")
 
 # --- 1. VSTUP ---
@@ -36,11 +46,11 @@ st.subheader("Vložte chronickou medikaci pacienta:")
 med_text = st.text_area(
     "", 
     height=200, 
-    placeholder="Např.: Prestarium, Eliquis, Metformin, Ozempic, Bydureon..."
+    placeholder="Např.: Cosyrel 5/10mg tbl., Palexia, Ylpio, Zyrtec, Xanirva..."
 ).lower()
 st.write("")
 
-# --- 2. DATABÁZE LÉČIV (Vertikálně strukturovaná proti uříznutí) ---
+# --- 2. DATABÁZE LÉČIV ---
 db = [
     {
         "brands": [
@@ -49,12 +59,12 @@ db = [
             "moduretic", "rasilez hct", "rhefluin", "stadapres", "tarka", 
             "tonarsa", "triasyn", "tritazide", "valsacombi", "vidonorm", 
             "triplixam", "tezefort", "twynsta", "tonarssa", "lorista h", 
-            "prestance", "lercaprel", "tonanda"
+            "prestance", "lercaprel", "tonanda", "ylpio", "cosyrel"
         ], 
-        "gen": "Kombinace (ACEI/Sartan/Diur)", 
+        "gen": "Kombinace (obsahuje ACEI/Sartan/Diur)", 
         "grp": "Kombinace", 
         "act": "VYSADIT V DEN VÝKONU", 
-        "info": "Obsahuje ACEI, Sartan nebo Diuretikum.", 
+        "info": "Obsahuje ACEI, Sartan nebo Diuretikum (u Cosyrelu převáží riziko ACEI nad BB).", 
         "col": "red"
     },
     {
@@ -143,15 +153,15 @@ db = [
         "col": "green"
     },
     {
-        "brands": ["ezetrol", "ezetimib", "lipanthyl", "fenofibrat"], 
-        "gen": "Fibráty / Ezetrol", 
+        "brands": ["ezetrol", "ezetimib", "lipanthyl", "fenofibrat", "ezen", "delipid plus"], 
+        "gen": "Fibráty / Ezetimib", 
         "grp": "Hypolipidemika", 
         "act": "VYSADIT V DEN VÝKONU", 
-        "info": "Riziko myopatie.", 
+        "info": "U kombinací (Delipid Plus) převažuje nutnost vysazení Ezetimibu.", 
         "col": "red"
     },
     {
-        "brands": ["atorvastatin", "sorvasta", "tulip", "rosuvastatin", "torvacard", "atoris", "sortis"], 
+        "brands": ["atorvastatin", "sorvasta", "tulip", "rosuvastatin", "torvacard", "atoris", "sortis", "rosucard", "rosumop"], 
         "gen": "Statin", 
         "grp": "Hypolipidemika", 
         "act": "PONECHAT", 
@@ -159,7 +169,7 @@ db = [
         "col": "green"
     },
     {
-        "brands": ["cordarone", "sedacoron", "amiodaron", "ritmonorm", "digoxin"], 
+        "brands": ["cordarone", "sedacoron", "amiodaron", "ritmonorm", "digoxin", "rivodaron"], 
         "gen": "Antiarytmikum", 
         "grp": "Kardio", 
         "act": "PONECHAT", 
@@ -199,7 +209,7 @@ db = [
         "col": "red"
     },
     {
-        "brands": ["eliquis", "apixaban", "xarelto", "rivaroxaban", "pradaxa", "dabigatran", "lixiana", "edoxaban"], 
+        "brands": ["eliquis", "apixaban", "xarelto", "rivaroxaban", "pradaxa", "dabigatran", "lixiana", "edoxaban", "xanirva"], 
         "gen": "NOAK", 
         "grp": "NOAK", 
         "act": "VYSADIT 1 NEBO 2 DNY PŘEDEM", 
@@ -415,6 +425,14 @@ db = [
         "col": "red"
     },
     {
+        "brands": ["donepezil", "aricept", "yasnal", "memantin", "ebixa", "kognityl", "rivastigmin", "exelon"], 
+        "gen": "Kognitiva (Inh. ACHE)", 
+        "grp": "Neuro", 
+        "act": "PONECHAT", 
+        "info": "Nevysazovat (riziko zhoršení kognice/zmatenosti).", 
+        "col": "green"
+    },
+    {
         "brands": ["doreta", "zaldiar", "foxis", "palgotal", "ultracod", "tramal", "mabron", "tramabene"], 
         "gen": "Tramadol/Paracetamol", 
         "grp": "Analgetikum (Opioid)", 
@@ -431,7 +449,7 @@ db = [
         "col": "yellow"
     },
     {
-        "brands": ["oxycontin", "targin", "dhc", "sevredol"], 
+        "brands": ["oxycontin", "targin", "dhc", "sevredol", "palexia", "tapentadol"], 
         "gen": "Silný opioid (p.o.)", 
         "grp": "Analgetikum", 
         "act": "PONECHAT", 
@@ -463,9 +481,25 @@ db = [
         "col": "red"
     },
     {
+        "brands": ["ursosan", "ursofalk"], 
+        "gen": "Kys. ursodeoxycholová", 
+        "grp": "GIT", 
+        "act": "PONECHAT", 
+        "info": "-", 
+        "col": "green"
+    },
+    {
         "brands": ["kalnormin", "magnosolv", "magnesium", "vigantol", "novalgin"], 
         "gen": "Suplementace / Analgetika", 
         "grp": "Ostatní", 
+        "act": "PONECHAT", 
+        "info": "-", 
+        "col": "green"
+    },
+    {
+        "brands": ["zyrtec", "analergin", "xalerg", "zenaro", "cezera", "desloratadin", "cetirizin", "levocetirizin", "aerius"], 
+        "gen": "Antihistaminika", 
+        "grp": "Alergie", 
         "act": "PONECHAT", 
         "info": "-", 
         "col": "green"
@@ -498,29 +532,62 @@ db = [
 
 # --- 3. VYHODNOCENÍ ---
 if st.button("🚀 VYHODNOTIT MEDIKACI", type="primary"):
-    st.subheader("Doporučení:")
-    found_count = 0
+    
+    kept_drugs = []
+    stopped_drugs = []
     diabetik_nalezen = False
     
+    # Roztřídění léků do dvou skupin
     for item in db:
         match = next((b for b in item["brands"] if b in med_text), None)
-        
         if match:
-            found_count += 1
             if item["grp"] in ["Diabetes", "Antidiabetikum"]:
                 diabetik_nalezen = True
                 
-            st.markdown(f"""
-            <div class="drug-card border-{item['col']}">
-                <span class="card-title">{match.capitalize()} <span class="card-generic">({item['gen']})</span></span>
-                <span class="card-rec">{item['act']}</span>
-                <span class="card-info">{item['info']}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            # Pokud je akce "PONECHAT" (vč. Ponechat s LMWH atd.), jde do zelené skupiny
+            if "PONECHAT" in item["act"]:
+                kept_drugs.append((match.capitalize(), item))
+            else:
+                # Vše k vysazení, redukci nebo vynechání jde do červené skupiny
+                stopped_drugs.append((match.capitalize(), item))
 
-    if found_count == 0:
+    # --- ZOBRAZENÍ VÝSLEDKŮ ---
+    if not kept_drugs and not stopped_drugs:
         st.info("Žádná riziková medikace nenalezena (nebo není v databázi).")
-        
+    else:
+        # 1. Skupina: LÉKY K PONECHÁNÍ
+        if kept_drugs:
+            st.subheader("✅ Léky k ponechání v den výkonu:")
+            for drug_name, item in kept_drugs:
+                st.markdown(f"""
+                <div class="drug-card border-{item['col']}">
+                    <span class="card-title">{drug_name} <span class="card-generic">({item['gen']})</span></span>
+                    <span class="card-rec">{item['act']}</span>
+                    <span class="card-info">{item['info']}</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+        # 2. Skupina: LÉKY K VYSAZENÍ/ÚPRAVĚ
+        if stopped_drugs:
+            st.subheader("🛑 Léky k vysazení nebo úpravě dávky:")
+            for drug_name, item in stopped_drugs:
+                st.markdown(f"""
+                <div class="drug-card border-{item['col']}">
+                    <span class="card-title">{drug_name} <span class="card-generic">({item['gen']})</span></span>
+                    <span class="card-rec">{item['act']}</span>
+                    <span class="card-info">{item['info']}</span>
+                </div>
+                """, unsafe_allow_html=True)
+                
+        # 3. Skupina: TEXT DO NISu (Informační systém)
+        st.markdown(f"""
+        <div class="nis-box">
+            <strong>📝 Text do informačního systému (NIS):</strong><br><br>
+            V den výkonu podat: {', '.join([drug[0] for drug in kept_drugs]) if kept_drugs else 'nic (vše vysazeno)'}
+        </div>
+        """, unsafe_allow_html=True)
+
+    # --- VAROVÁNÍ A DIA PROTOKOL ---
     if "vysazeno" in med_text or "ex" in med_text:
         st.warning("⚠️ **Pozor:** Text obsahuje slovo 'vysazeno'/'ex'. Pokud pacient lék neužívá, ignorujte pokyn k jeho vysazení.")
         
@@ -529,4 +596,4 @@ if st.button("🚀 VYHODNOTIT MEDIKACI", type="primary"):
         st.error("🩸 **Diabetický management pro sál:**\n\n"
                  "• **Cílová glykémie:** 6,1 – 10,0 mmol/l.\n"
                  "• **Malé výkony:** Při užití PAD ráno výkon nerušit, lze provést s kontrolami á 2-4h + G10% s Inzulinem.\n"
-                 "• **Střední/Velké výkony (> 2 hod):** Nutná hospitalizace den předem. Na sál infuze G10% 500ml + 12-16j inzulinu (kontroly á 2 hod).")
+                 "• **Střední/Velké výkony (> 2 hod):** Nutná hospitalizace den před
